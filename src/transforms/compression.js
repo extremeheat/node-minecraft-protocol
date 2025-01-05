@@ -21,7 +21,13 @@ class Compressor extends Transform {
   _transform (chunk, enc, cb) {
     if (chunk.length >= this.compressionThreshold) {
       zlib.deflate(chunk, (err, newChunk) => {
-        if (err) { return cb(err) }
+        if (err) {
+          console.log('compression failure for ' + chunk.length + ' chunk bytes')
+          console.log('hex ' + chunk.toString('hex'))
+          const e = new Error(err.message)
+          e.original = err
+          return cb(e)
+        }
         const buf = Buffer.alloc(sizeOfVarInt(chunk.length) + newChunk.length)
         const offset = writeVarInt(chunk.length, buf, 0)
         newChunk.copy(buf, offset)
