@@ -5,6 +5,26 @@ const UUID = require('uuid-1345')
 const zlib = require('zlib')
 const [readVarInt, writeVarInt, sizeOfVarInt] = require('protodef').types.varint
 
+function wrapError (err) {
+  const e = new Error(err.message)
+  e.original = err
+  return e
+}
+function zlibUnzip (buffer) {
+  try {
+    return zlib.gunzipSync(buffer)
+  } catch (e) {
+    throw wrapError(e)
+  }
+}
+function zlibZip (buffer) {
+  try {
+    return zlib.gzipSync(buffer)
+  } catch (e) {
+    throw wrapError(e)
+  }
+}
+
 module.exports = {
   varlong: [readVarLong, writeVarLong, sizeOfVarLong],
   UUID: [readUUID, writeUUID, 16],
@@ -55,7 +75,7 @@ function readCompressedNbt (buffer, offset) {
 
   const compressedNbt = buffer.slice(offset + 2, offset + 2 + length)
 
-  const nbtBuffer = zlib.gunzipSync(compressedNbt) // TODO: async
+  const nbtBuffer = zlibUnzip(compressedNbt) // TODO: async
 
   const results = nbt.proto.read(nbtBuffer, 0, 'nbt')
   return {
@@ -72,7 +92,7 @@ function writeCompressedNbt (value, buffer, offset) {
   const nbtBuffer = Buffer.alloc(sizeOfNbt(value))
   nbt.proto.write(value, nbtBuffer, 0, 'nbt')
 
-  const compressedNbt = zlib.gzipSync(nbtBuffer) // TODO: async
+  const compressedNbt = zlibZip(nbtBuffer) // TODO: async
   compressedNbt.writeUInt8(0, 9) // clear the OS field to match MC
 
   buffer.writeInt16BE(compressedNbt.length, offset)
@@ -86,7 +106,7 @@ function sizeOfCompressedNbt (value) {
   const nbtBuffer = Buffer.alloc(sizeOfNbt(value, { tagType: 'nbt' }))
   nbt.proto.write(value, nbtBuffer, 0, 'nbt')
 
-  const compressedNbt = zlib.gzipSync(nbtBuffer) // TODO: async
+  const compressedNbt = zlibZip(nbtBuffer) // TODO: async
 
   return 2 + compressedNbt.length
 }
