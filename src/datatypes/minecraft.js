@@ -12,14 +12,18 @@ function wrapError (err) {
 }
 function zlibUnzip (buffer) {
   try {
+    console.log('Z UNZIP D')
     return zlib.gunzipSync(buffer)
+    console.log('K')
   } catch (e) {
     throw wrapError(e)
   }
 }
 function zlibZip (buffer) {
   try {
+    console.log('Z ZIP D')
     return zlib.gzipSync(buffer)
+    console.log('K')
   } catch (e) {
     throw wrapError(e)
   }
