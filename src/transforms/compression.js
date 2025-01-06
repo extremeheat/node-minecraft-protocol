@@ -20,7 +20,9 @@ class Compressor extends Transform {
 
   _transform (chunk, enc, cb) {
     if (chunk.length >= this.compressionThreshold) {
+      console.log('Z DEF')
       zlib.deflate(chunk, (err, newChunk) => {
+        console.log('K')
         if (err) {
           console.log('compression failure for ' + chunk.length + ' chunk bytes')
           console.log('hex ' + chunk.toString('hex'))
@@ -58,7 +60,9 @@ class Decompressor extends Transform {
       this.push(chunk.slice(size))
       return cb()
     } else {
+      console.log('Z INF')
       zlib.unzip(chunk.slice(size), { finishFlush: 2 /*  Z_SYNC_FLUSH = 2, but when using Browserify/Webpack it doesn't exist */ }, (err, newBuf) => { /** Fix by lefela4. */
+        console.log('K')
         if (err) {
           if (!this.hideErrors) {
             console.error('problem inflating chunk')
